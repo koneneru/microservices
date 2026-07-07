@@ -1,0 +1,115 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment # Отключено, так как оптимизация выравнивания полей часто избыточна при активной разработке
+
+  gofumpt:
+    extra-rules: true # Строгое форматирование кода
+
+  goimports:
+    local-prefixes: "github.com/koneneru/microservices" # РЕКОМЕНДАЦИЯ: Укажи здесь префикс твоего модуля (например, github.com/your-org/your-repo)
+
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: var-naming
+      - name: package-comments
+      - name: range
+
+  depguard:
+    rules:
+      main:
+        files:
+          - "$all"
+        deny:
+          - pkg: "html/template"
+            desc: "Используй text/template или специализированные сериализаторы для API-микросервисов"
+      domain_layers:
+        files:
+          - "**/internal/domain/**"
+        deny:
+          - pkg: "**/internal/infrastructure/**"
+            desc: "Нарушение Clean Architecture: Доменный слой не должен зависеть от Инфраструктуры"
+          - pkg: "database/sql"
+            desc: "Нарушение Clean Architecture: Доменный слой не должен напрямую импортировать SQL-драйверы"
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - whyNoLint
+
+  gocyclo:
+    min-complexity: 15
+
+  nolintlint:
+    allow-unused: false
+    require-explanation: true
+    require-specific: true
+
+linters:
+  disable-all: true
+  enable:
+    # Базовые проверки корректности
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    
+    # Стилистика и форматирование
+    - gofumpt
+    - goimports
+    - revive
+    - misspell
+    - whitespace
+    
+    # Микросервисные и инфраструктурные проверки
+    - bodyclose     # Контроль закрытия HTTP Response Body
+    - sqlclosecheck # Контроль закрытия sql.Rows и sql.Stmt
+    - errorlint     # Проверка использования errors.Is / errors.As
+    - unconvert     # Поиск лишних приведений типов
+    - dupword       # Поиск дублирующихся слов в комментариях/строках
+    
+    # Контроль архитектуры и дисциплины кода
+    - depguard
+    - nolintlint
+    - gocyclo
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  # Исключаем из проверок автогенерируемый код (Protobuf / Mockery / Buf)
+  exclude-dirs:
+    - gen
+    - mocks
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.validate\\.go$"
+    - ".*_mock\\.go$"
