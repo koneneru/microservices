@@ -1,0 +1,49 @@
+version: '3'
+
+vars:
+  LOCAL_BIN: "{{ .USER_WORKING_DIR }}/.bin"
+
+env:
+  GOBIN: "{{ .LOCAL_BIN }}"
+
+tasks:
+
+  # ===========================================================================
+  # Public API
+  # ===========================================================================
+  install:
+    desc: Install all development tools
+    deps:
+
+  clean:
+    desc: Remove all installed tools
+    cmds:
+      - cmd: echo "Removing development tools..."
+      - rm -rf "{{ .LOCAL_BIN }}"
+
+  list:
+    desc: List installed tools
+    cmds:
+      - cmd: echo "Installed tools:"
+      - ls -1 "{{ .LOCAL_BIN }}" || true
+
+  # ===========================================================================
+  # Generic
+  # ===========================================================================
+  installer:go:
+    internal: true
+    status:
+      - test -x "{{ .LOCAL_BIN }}/{{ .NAME }}"
+    cmds:
+      - mkdir -p "{{ .LOCAL_BIN }}"
+      - |
+        echo "Installing {{ .NAME }} {{ .VERSION }}"
+        go install {{ .MODULE }}@{{ .VERSION }}
+
+  installer:script:
+    internal: true
+    status:
+      - test -x "{{ .LOCAL_BIN }}/{{ .NAME }}"
+    cmds:
+      - mkdir -p "{{ .LOCAL_BIN }}"
+      - "{{ .SCRIPT }} {{ .VERSION }}"

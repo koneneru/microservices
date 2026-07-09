@@ -1,0 +1,100 @@
+version: '3'
+
+vars:
+  LOCAL_BIN: '{{ .USER_WORKING_DIR }}/.bin'
+  DOCKER_COMPOSE: './deploy/docker-compose.yaml'
+
+  SERVICE_DIR: 'services'
+  MODULE_PREFIX: 'github.com/koneneru/microservices'
+
+  MIN_GO_MAJOR: "1"
+  MIN_GO_MINOR: "26"
+
+  SERVICES: []
+
+includes:
+  service:
+    taskfile: ./task/Taskfile.service.yaml
+    internal: true
+    vars:
+      MODULE_PREFIX: "{{ .MODULE_PREFIX }}"
+      SERVICE_DIR: "{{ .SERVICE_DIR }}"
+
+  tools:
+    taskfile: ./task/Taskfile.tools.yaml
+    internal: true
+
+tasks:
+
+  # ===========================================================================
+  # Default
+  # ===========================================================================
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  # ===========================================================================
+  # Environment
+  # ===========================================================================
+  env:
+    desc: Validate development environment
+    preconditions:
+      - sh: command -v go >/dev/null
+        msg: Go is not installed
+
+      - sh: command -v git >/dev/null
+        msg: Git in not installed
+
+      - sh: command -v docker >/dev/null
+        msg: Docker is not installed
+
+      - sh: |
+          GOVERSION=$(go env GOVERSION)
+          MAJOR=$(echo "$GOVERSION" | cut -d. -f1 | sed 's/go//')
+          MINOR=$(echo "$GOVERSION" | cut -d. -f2)
+
+          [ "$MAJOR" -gt "{{.MIN_GO_MAJOR}}" ] || \
+          { [ "$MAJOR" -eq "{{.MIN_GO_MAJOR}}" ] && [ "$MINOR" -ge "{{.MIN_GO_MINOR}}" ]; }
+        msg: "Go {{.MIN_GO_MAJOR}}.{{.MIN_GO_MINOR}} or newer is required."
+    cmds:
+      - cmd: echo "Environment validation completed"
+        silent: true
+
+  # ===========================================================================
+  # Bootstrap
+  # ===========================================================================
+  init:
+    desc: Initialize development environment
+    deps:
+      - env
+      - tools:install
+      - init:workspace
+      - init:deps
+    cmds:
+      - cmd: echo "Development environment initialized"
+        silent: true
+
+  # ===========================================================================
+  # Workspace
+  # ===========================================================================
+  init:workspace:
+    desc: Initialize Go Workspace
+    internal: true
+    cmds:
+      - cmd: echo "Setting up go.work..."
+        silent: true
+      - |
+        if [ ! -f go.work ]; then
+          go work init
+        fi
+      - go work use -r ./services ./pkg 2>/dev/null || true
+      - go work sync
+
+  init:deps:
+    desc: Load dependencies for all services
+    internal: true
+    cmds:
+      - cmd: echo "Load service dependencies"
+        silent: true
+      - go work edit -json | grep '"DiskPath":' | cut -d'"' -f4 | xargs -I {} -P 8 sh -c 'cd {} && go mod tidy'

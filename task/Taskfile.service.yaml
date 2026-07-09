@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+
+  # ===========================================================================
+  # Public API
+  # ===========================================================================
+  new:
+    desc: Create a new service using Clean Architecture pattern
+    requires:
+      vars:
+        - name
+    preconditions:
+      - sh: test ! -d "{{ .SERVICE_DIR }}/{{ .name }}"
+        msg: Service already exists
+    cmds:
+      - cmd: echo "Creating service {{ .name }}..."
+      - mkdir -p services/{{ .name }}/internal/{domain,usecase,controller,infrastructure}
+      - mkdir -p services/{{ .name }}/cmd/app
+      - cd services/{{ .name }} && go mod init {{ .MODULE_PREFIX }}/services/{{ .name }}
+      - go work use services/{{ .name }}
+      - echo "Service '{{ .name }}' was created and added to go.work"
