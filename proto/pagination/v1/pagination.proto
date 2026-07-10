@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pagination.v1;
+
+option go_package = "pagination/v1;paginationv1";
+
+message Pagination {
+  uint32 offset = 1;
+  uint32 limit = 2;
+}
