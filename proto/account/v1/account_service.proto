@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package account.v1;
+
+import "account/v1/account_model.proto";
+import "pagination/v1/pagination.proto";
+
+option go_package = "account/v1;accountv1";
+
+service AccountService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+}
+
+message CreateUserRequest {
+  CreateUser user = 1;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  uint64 user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message GetUsersRequest {
+  pagination.v1.Pagination pagination = 1;
+}
+
+message GetUsersResponse {
+  repeated User users = 1;
+  pagination.v1.Pagination pagination = 2;
+}
+
+message DeleteUserRequest {
+  uint64 user_id = 1;
+}
+
+message DeleteUserResponse {}
+
+message UpdateUserRequest {
+  uint64 user_id = 1;
+  User user = 2;
+}
+
+message UpdateUserResponse {}
