@@ -1,0 +1,60 @@
+version: '3'
+
+includes:
+  tools:
+    taskfile: ./Taskfile.tools.yaml
+    internal: true
+
+vars:
+  PROTO_DIR: 'proto'
+  GEN_DIR: '{{.ROOT_DIR}}/gen/proto'
+
+tasks:
+  default:
+    desc: Format, lint and generate protobuf files
+    deps:
+      - task: gen
+
+  breaking:
+    desc: Check for breaking changes against main
+    deps:
+      - tools:install:buf
+    cmds:
+      - buf breaking {{.PROTO_DIR}} --against '.git#branch=main'
+
+  clean:
+    desc: Remove generated protobuf artifacts
+    cmds:
+      - find {{.GEN_DIR}} -mindepth 2 -maxdepth 2 -type d -exec rm -rf {} +
+
+  format:
+    desc: Format all proto files according to Buf style guide
+    deps:
+      - tools:install:buf
+    sources:
+      - '{{.PROTO_DIR}}/**/*.proto'
+    cmds:
+      - buf format -w {{.PROTO_DIR}}
+
+  gen:
+    desc: Generate Go and gRPC code from Protocol Buffers using Buf
+    deps:
+      - format
+      - lint
+    sources:
+      - '{{.PROTO_DIR}}/**/*.proto'
+      - '{{.PROTO_DIR}}/buf.gen.yaml'
+    generates:
+      - '{{.GEN_DIR}}/**/*.go'
+    cmds:
+      - task: clean
+      - buf generate {{.PROTO_DIR}} --template {{.PROTO_DIR}}/buf.gen.yaml
+
+  lint:
+    desc: Lint protocol buffer files
+    deps:
+      - tools:install:buf
+    sources:
+      - '{{.PROTO_DIR}}/**/*.proto'
+    cmds:
+      - buf lint {{.PROTO_DIR}}

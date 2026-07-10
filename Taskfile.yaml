@@ -13,6 +13,9 @@ vars:
   SERVICES: []
 
 includes:
+  proto:
+    taskfile: ./task/Taskfile.proto.yaml
+
   service:
     taskfile: ./task/Taskfile.service.yaml
     internal: true
@@ -98,3 +101,18 @@ tasks:
       - cmd: echo "Load service dependencies"
         silent: true
       - go work edit -json | grep '"DiskPath":' | cut -d'"' -f4 | xargs -I {} -P 8 sh -c 'cd {} && go mod tidy'
+
+  # ===========================================================================
+  # Generation
+  # ===========================================================================
+  clean:
+    desc: Remove generated artifacts
+    cmds:
+      - task: proto:clean
+      - for: { var: SERVICES }
+        cmd: '{{.ITEM}}:base:clean'
+
+  generate:
+    desc: Generate all project artifacts
+    deps: 
+      - proto:gen
