@@ -14,6 +14,9 @@ tasks:
   install:
     desc: Install all development tools
     deps:
+      - task: install:buf
+      - task: install:protoc-gen-go
+      - task: install:protoc-gen-go-grpc
 
   clean:
     desc: Remove all installed tools
@@ -26,6 +29,39 @@ tasks:
     cmds:
       - cmd: echo "Installed tools:"
       - ls -1 "{{ .LOCAL_BIN }}" || true
+
+  # ============================================================================
+  # buf
+  # ============================================================================
+  install:buf:
+    deps:
+      - task: installer:go
+        vars:
+          NAME: buf
+          MODULE: github.com/bufbuild/buf/cmd/buf
+          VERSION: v1.71.0
+    
+  # ============================================================================
+  # protoc-gen-go
+  # ============================================================================
+  install:protoc-gen-go:
+    deps:
+      - task: installer:go
+        vars:
+          NAME: protoc-gen-go
+          MODULE: google.golang.org/protobuf/cmd/protoc-gen-go
+          VERSION: v1.36.11
+
+  # ============================================================================
+  # protoc-gen-go-grpc
+  # ============================================================================
+  install:protoc-gen-go-grpc:
+    deps:
+      - task: installer:go
+        vars:
+          NAME: protoc-gen-go-grpc
+          MODULE: google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          VERSION: v1.6.2
 
   # ===========================================================================
   # Generic
