@@ -17,6 +17,8 @@ tasks:
       - task: install:buf
       - task: install:protoc-gen-go
       - task: install:protoc-gen-go-grpc
+      - task: install:mockery
+      - task: install:golangci-lint
 
   clean:
     desc: Remove all installed tools
@@ -62,6 +64,28 @@ tasks:
           NAME: protoc-gen-go-grpc
           MODULE: google.golang.org/grpc/cmd/protoc-gen-go-grpc
           VERSION: v1.6.2
+
+  # ============================================================================
+  # mockery
+  # ============================================================================
+  install:mockery:
+    deps:
+      - task: installer:go
+        vars:
+          NAME: mockery
+          MODULE: github.com/vektra/mockery/v3
+          VERSION: v3.7.1
+
+  # ============================================================================
+  # golangci-lint
+  # ============================================================================
+  install:golangci-lint:
+    deps:
+      - task: installer:script
+        vars:
+          NAME: golangci-lint
+          SCRIPT: curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "{{ .LOCAL_BIN }}"
+          VERSION: v2.12.2
 
   # ===========================================================================
   # Generic
