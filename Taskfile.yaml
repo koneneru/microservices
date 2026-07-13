@@ -18,7 +18,6 @@ includes:
 
   service:
     taskfile: ./task/Taskfile.service.yaml
-    internal: true
     vars:
       MODULE_PREFIX: "{{ .MODULE_PREFIX }}"
       SERVICE_DIR: "{{ .SERVICE_DIR }}"
