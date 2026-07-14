@@ -15,5 +15,5 @@ func New(repo UserRepository) *Handler {
 func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	user, err := h.repo.GetUser(ctx, cmd.UserID)
 
-	return Result{user: user}, err
+	return Result{User: user}, err
 }
