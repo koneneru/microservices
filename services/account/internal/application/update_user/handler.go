@@ -12,6 +12,6 @@ func New(repo UserRepository) *Handler {
 	}
 }
 
-func (h *Handler) UpdateUser(ctx context.Context, cmd Command) error {
+func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	return h.repo.DeleteUser(ctx, cmd.UserID, cmd.User)
 }
